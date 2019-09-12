@@ -9,7 +9,8 @@ Python 2.7,
 R 3.5.3
 
 
-**Instrtuctions**
+**Instructions**
+
 
 **Input file** The input file needs to be in csv format. The first row becomes the title of your protein list. This title can have letters, numbers, spaces of special characters. Note that the spaces and special charaters will be converted to "." in the output. Each column needs to have at least one offical gene smybol. We discussed making the requirment be at least three.
 
