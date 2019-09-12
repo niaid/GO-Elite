@@ -3,6 +3,9 @@ GO-Elite is designed to identify a minimal non-redundant set of biological Ontol
 
 This script takes a list or multiple list of protiens/genes and peforms the GO-elite anlaysis. It then produces a pdf output using R.
 
+**Dependencies**
+Python 2.7
+R 3.5.3
 
 
 **Instrtuctions**
