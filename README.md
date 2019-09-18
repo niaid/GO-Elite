@@ -9,7 +9,8 @@ Python 2.7,
 R 3.5.3,
 R library "stringr"
 
-To install stringr
+To install stringr:
+
 install.packages("stringr")
 
 ## Test with demonstration data:
