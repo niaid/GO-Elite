@@ -7,11 +7,7 @@ This script takes a list or multiple list of protiens/genes and peforms the GO-e
 
 Python 2.7,
 R 3.5.3,
-R library "stringr"
-
-To install stringr:
-
-install.packages("stringr")
+R library 
 
 ## Test with demonstration data:
 
