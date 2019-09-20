@@ -26,6 +26,9 @@ $ python2 GO_Elite.py --species Hs \
 **Instructions**
 
 
+**Unzip** Ensure that GO-Elite/Databases/EnsMart62Plus/Hs/nested.7z is unzipped.
+
+
 **Input file** The input file needs to be in csv format. The first row becomes the title of your protein list. This title can have letters, numbers, spaces of special characters. Note that the spaces and special charaters will be converted to "." in the output. Each column needs to have at least one offical gene smybol. We discussed making the requirment be at least three.
 
 **Background** The background is a list of offical gene smybols in witch all other list/s are compared to determine enrichment of biological functions, struture motifs, or localization. This background list, if not specified is the column with the largest number of terms. The background must be larger than the list it is being compared too. I must also contain every gene that is found in any other column.
