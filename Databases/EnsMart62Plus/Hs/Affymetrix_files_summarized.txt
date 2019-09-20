@@ -1,0 +1,11 @@
+HG-Focus.na29.annot.csv	06/30/2011
+HG_U95D.na29.annot.csv	06/30/2011
+HuGene-1_0-st-v1.na29.hg18.transcript.csv	06/30/2011
+HG_U95Av2.na29.annot.csv	06/30/2011
+HG_U95B.na29.annot.csv	06/30/2011
+HG_U95E.na29.annot.csv	06/30/2011
+HuGene-1_0-st-v1.na29.AFFX_README.NetAffx-CSV-Files.txt	06/30/2011
+HG_U95C.na29.annot.csv	06/30/2011
+HG-U133_Plus_2.na29.annot.csv	06/30/2011
+3prime-IVT.AFFX_README.NetAffx-CSV-Files.txt	06/30/2011
+wikipathways_native_data_Homo sapiens.tab	06/30/2011
