@@ -22,7 +22,7 @@ dev.off()
 options(stringsAsFactors=FALSE)
 
 ######################## EDIT THESE VARIABLES (USER PARAMETERS) #########################################################
-fileName <- "3col_test5.csv"    #Input list, often comes from WGCNA pipeline
+fileName <- "test_data.csv"    #Input list, often comes from WGCNA pipeline
             #INPUT is a CSV FILE - in the filePath folder.(The variable below)
             #Can be formatted as Kme table from WGCNA pipeline, or
             #can be a CSV of columns, one symbol or UniqueID (Symbol|...) list per column, with the LIST NAMEs in row 1
