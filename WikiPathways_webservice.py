@@ -21,16 +21,14 @@ import os
 import base64
 import export
 import time
+import gene_associations
 import unique
-try:
-    import gene_associations
-    import suds
-    from suds.client import Client
-    wsdl = 'http://www.wikipathways.org/wpi/webservice/webservice.php?wsdl'
-    client = Client(wsdl)
-except Exception:
-    None ### Occurs when functions in this module are resued in different modules
+import suds
+from suds.client import Client
             
+wsdl = 'http://www.wikipathways.org/wpi/webservice/webservice.php?wsdl'
+client = Client(wsdl)
+
 def filepath(filename):
     fn = unique.filepath(filename)
     return fn
@@ -52,6 +50,7 @@ class PathwayData:
         output = self.WPName()
         return output
     def __repr__(self): return self.Report()
+
 
 def getPathwayAs(pathway_db,species_code,mod):
     begin_time = time.time()
@@ -88,14 +87,12 @@ def getHexadecimalColorRanges(fold_db,analysis_type):
     if analysis_type == 'Lineage':
         vmax = max(all_folds) ### replaces the old method of getting centered colors
     else:
-        try: vmax,vmin=getColorRange(all_folds) ### We want centered colors for this (unlike with Lineage analysis)
-        except Exception: vmax,vmin = 0,0
+        vmax,vmin=getColorRange(all_folds) ### We want centered colors for this (unlike with Lineage analysis)
     ### Normalize these values from 0 to 1
-    norm_folds_db={}; norm_folds=[]; color_all_yellow = False
+    norm_folds_db={}; norm_folds=[]
     for f in all_folds:
         if analysis_type != 'Lineage':
-            try: n=(f-vmin)/(vmax-vmin) ### normalized
-            except Exception: n = 1; color_all_yellow = True
+            n=(f-vmin)/(vmax-vmin) ### normalized
         else:
             n=(f-1.0)/(vmax-1.0) ### customized -> 1 is the lowest
         norm_folds_db[n]=f
@@ -107,40 +104,35 @@ def getHexadecimalColorRanges(fold_db,analysis_type):
     r0 = 207; g0 = 207; b0 = 207
     rn = 255; gn = 64; bn = 64
     
-    if color_all_yellow:
-        for gene in fold_db:
-            fold_db[gene] = 'FFFF00'
-    else:
+    if analysis_type != 'Lineage':
+        ### blue -> grey
+        r0 = 0; g0 = 191; b0 = 255
+        rn = 207; gn = 207; bn = 207
+        ### grey -> red
+        r20 = 207; g20 = 207; b20 = 207
+        r2n = 255; g2n = 0; b2n = 0
+
+    gene_colors_hex = {}
+    for n in norm_folds:
+        ri=int(r0+(n*(rn-r0)))
+        gi=int(g0+(n*(gn-g0)))
+        bi=int(b0+(n*(bn-b0)))
+        rgb=ri,gi,bi ###blue to grey for non-lineage analyses
         if analysis_type != 'Lineage':
-            ### blue -> grey
-            r0 = 0; g0 = 191; b0 = 255
-            rn = 207; gn = 207; bn = 207
-            ### grey -> red
-            r20 = 207; g20 = 207; b20 = 207
-            r2n = 255; g2n = 0; b2n = 0
-    
-        gene_colors_hex = {}
-        for n in norm_folds:
-            ri=int(r0+(n*(rn-r0)))
-            gi=int(g0+(n*(gn-g0)))
-            bi=int(b0+(n*(bn-b0)))
-            rgb=ri,gi,bi ###blue to grey for non-lineage analyses
-            #rgb = (255,0,0) 
-            if analysis_type != 'Lineage':
-                r2i=int(r20+(n*(r2n-r20)))
-                g2i=int(g20+(n*(g2n-g20)))
-                b2i=int(b20+(n*(b2n-b20)))
-                rgb2=r2i,g2i,b2i ### grey->red
-            f = norm_folds_db[n] ### get the original fold
-            genes = folds_to_gene[f] ## look up the gene(s) for that fold
-            if f<=1 and analysis_type == 'Lineage': ### only show positive z-scores with color
-                rgb = (207, 207, 207)
-            if f>0 and analysis_type == 'Genes':
-                rgb = rgb2
-            hex = '#%02x%02x%02x' % rgb
-            #print f,n,rgb,hex
-            for gene in genes:
-                fold_db[gene] = hex[1:]
+            r2i=int(r20+(n*(r2n-r20)))
+            g2i=int(g20+(n*(g2n-g20)))
+            b2i=int(b20+(n*(b2n-b20)))
+            rgb2=r2i,g2i,b2i ### grey->red
+        f = norm_folds_db[n] ### get the original fold
+        genes = folds_to_gene[f] ## look up the gene(s) for that fold
+        if f<=1 and analysis_type == 'Lineage': ### only show positive z-scores with color
+            rgb = (207, 207, 207)
+        if f>0 and analysis_type == 'Genes':
+            rgb = rgb2
+        hex = '#%02x%02x%02x' % rgb
+        #print f,n,rgb,hex
+        for gene in genes:
+            fold_db[gene] = hex[1:]
     return fold_db
 
 def getColorRange(x):
@@ -268,6 +260,7 @@ def getColoredPathway(root_dir,graphID_db,file_type,dataset_name):
         #print len(graphID_list),graphID_list
         #print len(hex_color_list),hex_color_list
         #print file_type
+        #print wpid;sys.exit()
         if len(graphID_list)==0:
             force_no_matching_error
         ### revision = 0 is the most current version
@@ -315,20 +308,14 @@ def importDataSimple(filename,input_type):
                     source_to_gene = OBO_import.swapKeyValues(gene_to_source_id)
             if input_type != 'LineageProfiler':
                 if source_is_mod == True:
-                    try: id_db[t[0]] = float(t[2])
-                    except Exception: id_db[t[0]] = 'NA'
+                    id_db[t[0]] = float(t[2])
                 elif t[0] in source_to_gene:
                     mod_ids = source_to_gene[t[0]]
                     for mod_id in mod_ids:
-                        value = t[2]
-                        if value == '+': value = 1
-                        elif value == '-': value = -1
-                        try: id_db[mod_id] = float(value) ### If multiple Ensembl IDs in dataset, only record the last associated fold change
-                        except Exception: id_db[mod_id] = 'NA'
+                        id_db[mod_id] = float(t[2]) ### If multiple Ensembl IDs in dataset, only record the last associated fold chagne
             else:
                 id_db[t[0]]= map(float,t[1:]) ### Applies to LineageProfiler
             x+=1
-    #print len(id_db),column_headers
     return id_db,column_headers
 
 def getColoredPathwayTest():
@@ -356,8 +343,8 @@ def getAllSpeciesPathways(species_full):
 
 if __name__ == '__main__':
     #getColoredPathwayTest();sys.exit()
-    filename = "/Users/nsalomonis/Desktop/PCBC_core-grant/SIDS_BioMarker_zscores.txt"
-    viewLineageProfilerResults(filename,[]); sys.exit()
+    filename = "/Users/nsalomonis/Desktop/code/AltAnalyze/datasets/3'Array/Merrill/ExpressionOutput/Clustering/LineageCorrelations-test-protein_coding-zscores-groups.txt"
+    #viewLineageProfilerResults(filename); sys.exit()
     filename = "/Users/nsalomonis/Desktop/code/AltAnalyze/datasets/3'Array/Merrill/GO-Elite/input/GE.ko_vs_wt.txt"
     pathway_db = getAllSpeciesPathways('Hs')
     for i in pathway_db:

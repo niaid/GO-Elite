@@ -66,19 +66,15 @@ def importSpeciesData():
     x=0
     fn=filepath(filename);global species_list; species_list=[]; global species_codes; species_codes={}
     global species_names; species_names={}
-    global species_taxids; species_taxids={}
     for line in open(fn,'rU').readlines():             
         data = cleanUpLine(line)
         t = string.split(data,'\t'); abrev=t[0]; species=t[1]
-        try: taxid = t[2]
-        except Exception: taxid = None
         if x==0: x=1
         else:
             species_list.append(species)
             species_codes[species] = abrev
             species_names[abrev] = species
-            species_taxids[abrev] = taxid
-           
+
 def getSourceData():
     filename = 'Config/source_data.txt'; x=0
     fn=filepath(filename)
@@ -99,25 +95,16 @@ def getSourceData():
             
 ############# File download/extraction #############           
 def downloadPAZARAssocations():
-    url = 'http://www.pazar.info/tftargets/tftargets.zip'
-    print 'Downloading Transcription Factor to Target associations'
-    fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/tftargets/','')
-    return 'raw'
-
-def downloadPAZARAssocationsOld():
-    """ This works fine, but is redundant with the new zip file that contains all files"""
-    
     base_url = 'http://www.pazar.info/tftargets/'
     filenames = getPAZARFileNames()
     print 'Downloading Transcription Factor to Target associations'
     source = 'raw'
     r = 4; k = -1
-    
     for resource in filenames:
         filename = filenames[resource]
         url = base_url+filename
         start_time = time.time()
-        fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/tftargets/','')
+        fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/PAZAR/','')
         end_time = time.time()
         if (end_time-start_time)>3: ### Hence the internet connection is very slow (will take forever to get everything)
             downloadPreCompiledPAZAR() ### Just get the compiled symbol data instead
@@ -134,19 +121,19 @@ def downloadPAZARAssocationsOld():
 def downloadPreCompiledPAZAR():
     """ Downloads the already merged symbol to TF file from PAZAR files """
     url = 'http://www.genmapp.org/go_elite/Databases/ExternalSystems/tf-target.txt'
-    fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/tftargets/symbol/','')
+    fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/PAZAR/symbol/','')
      
 def downloadAmadeusPredictions():
     url = 'http://www.genmapp.org/go_elite/Databases/ExternalSystems/symbol-Metazoan-Amadeus.txt'
     fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/Amadeus/','')
     
-def downloadBioMarkers(output_dir):
+def downloadBioMarkers():
     url = 'http://www.genmapp.org/go_elite/Databases/ExternalSystems/Hs_exon_tissue-specific_protein_coding.zip'
     print 'Downloading BioMarker associations'
-    fln,status = update.downloadSuppressPrintOuts(url,output_dir,'')
+    fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/BioMarkers/','')
     
     url = 'http://www.genmapp.org/go_elite/Databases/ExternalSystems/Mm_gene_tissue-specific_protein_coding.zip'
-    fln,status = update.downloadSuppressPrintOuts(url,output_dir,'')
+    fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/BioMarkers/','')
     
 def downloadKEGGPathways(species):
     print "Integrating KEGG associations for "+species
@@ -170,8 +157,7 @@ def downloadDomainAssociations(selected_species):
 def downloadPhenotypeOntologyOBO():
     print 'Downloading Phenotype Ontology structure and associations'
     url = 'ftp://ftp.informatics.jax.org/pub/reports/MPheno_OBO.ontology'
-    
-    fln,status = update.downloadSuppressPrintOuts(url,program_dir+'OBO/','')
+    fln,status = update.downloadSuppressPrintOuts(url,'OBO/','')
 
 def downloadPhenotypeOntologyGeneAssociations():
     url = 'ftp://ftp.informatics.jax.org/pub/reports/HMD_HumanPhenotype.rpt'
@@ -179,16 +165,6 @@ def downloadPhenotypeOntologyGeneAssociations():
     ### Mouse and human gene symbols and gene IDs (use the gene symbols)
     fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/Pheno/','')
 
-def downloadBioGRIDAssociations():
-    print 'Downloading BioGRID associations'
-    url = 'http://thebiogrid.org/downloads/archives/Latest%20Release/BIOGRID-ALL-LATEST.tab2.zip'
-    fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/BioGRID/','')
-
-def downloadDrugBankAssociations():
-    print 'Downloading DrugBank associations'
-    url = 'http://www.drugbank.ca/system/downloads/current/drugbank.txt.zip'
-    fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/DrugBank/','')
-    
 def downloadPathwayCommons():
     print 'Downloading PathwayCommons associations'
     url = 'http://www.pathwaycommons.org/pc-snapshot/current-release/gsea/by_species/homo-sapiens-9606-gene-symbol.gmt.zip'
@@ -203,7 +179,7 @@ def downloadDiseaseOntologyOBO():
     url = 'http://www.genmapp.org/go_elite/Databases/ExternalSystems/CTD.obo'
     
     ### Includes congenital and environmental diseases - http://ctdbase.org/detail.go?type=disease&acc=MESH%3aD002318
-    fln,status = update.downloadSuppressPrintOuts(url,program_dir+'OBO/','')
+    fln,status = update.downloadSuppressPrintOuts(url,'OBO/','')
     
 def downloadDiseaseOntologyGeneAssociations(selected_species):
     if selected_species == None: sc = []
@@ -240,23 +216,10 @@ def downloadMiRDatabases(species):
     fln = string.replace(fln,'.zip','.txt')
     return fln
 
-def downloadRvistaDatabases(species):
-    ### Source files from  http://hazelton.lbl.gov/pub/poliakov/wgrvista_paper/
-    url = 'http://www.genmapp.org/go_elite/Databases/ExternalSystems/'+species+'_RVista_factors.zip'
-    ### These files should be updated on a regular basis
-    fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/RVista/','')
-    fln = string.replace(fln,'.zip','.txt')
-    return fln
-
-def downloadEnsemblTranscriptAssociations(species):
-    url = 'http://www.genmapp.org/go_elite/Databases/ExternalSystems/Transcripts/'+species+'/Ensembl-EnsTranscript.txt'
-    ### These files should be updated on a regular basis
-    fln,status = update.downloadSuppressPrintOuts(url,program_dir+species+'/uid-gene/','')
-
 def downloadGOSlimOBO():
     url = 'http://www.geneontology.org/GO_slims/goslim_pir.obo'
     #url = 'http://www.geneontology.org/GO_slims/goslim_generic.obo'  ### Missing 
-    fln,status = update.downloadSuppressPrintOuts(url,database_dir+'OBO/','')
+    fln,status = update.downloadSuppressPrintOuts(url,'OBO/','')
     
 def importUniProtAnnotations(species_db):
     base_url = 'http://www.altanalyze.org/archiveDBs/'
@@ -266,22 +229,19 @@ def importUniProtAnnotations(species_db):
         fln,status = update.downloadSuppressPrintOuts(url,'BuildDBs/UniProt/'+species+'/','')
         for line in open(fln,'rU').xreadlines():
             data = cleanUpLine(line)
-            try:
-                ens_gene,compartment,function,symbols,full_name,uniprot_name,uniprot_ids,unigene = string.split(data,'\t')
-                symbols = string.split(string.replace(symbols,'; Synonyms=',', '),', ')
-                uniprot_ensembl_db[species,uniprot_name] = ens_gene
-                species_extension = string.split(uniprot_name,'_')[-1]
-                full_name = string.split(full_name,';')[0]
-                if 'Transcription factor' in full_name:
-                    symbols.append(string.split(full_name,'Transcription factor ')[-1]) ### Add this additional synonym to symbols
-                ### Extend this database out to account for weird names in PAZAR
-                for symbol in symbols:
-                    new_name = string.upper(symbol)+'_'+species_extension
-                    if new_name not in uniprot_ensembl_db:
-                        uniprot_ensembl_db[species,symbol+'_'+species_extension] = ens_gene
-                    uniprot_ensembl_db[species,string.upper(symbol)] = ens_gene
-            except Exception:
-                None
+            ens_gene,compartment,function,symbols,full_name,uniprot_name,uniprot_ids,unigene = string.split(data,'\t')
+            symbols = string.split(string.replace(symbols,'; Synonyms=',', '),', ')
+            uniprot_ensembl_db[species,uniprot_name] = ens_gene
+            species_extension = string.split(uniprot_name,'_')[-1]
+            full_name = string.split(full_name,';')[0]
+            if 'Transcription factor' in full_name:
+                symbols.append(string.split(full_name,'Transcription factor ')[-1]) ### Add this additional synonym to symbols
+            ### Extend this database out to account for weird names in PAZAR
+            for symbol in symbols:
+                new_name = string.upper(symbol)+'_'+species_extension
+                if new_name not in uniprot_ensembl_db:
+                    uniprot_ensembl_db[species,symbol+'_'+species_extension] = ens_gene
+                uniprot_ensembl_db[species,string.upper(symbol)] = ens_gene
     return uniprot_ensembl_db
 
 ############# Import/processing/export #############    
@@ -317,96 +277,56 @@ class TFTargetInfo:
     def __repr__(self): return self.TFName()
     
 def importPAZARAssociations():
-    pazar_files = unique.read_directory('/BuildDBs/tftargets')
+    pazar_files = unique.read_directory('/BuildDBs/PAZAR')
     species_db={}
     tf_to_target={}
-    tf_name_to_ID_db={}
     for file in pazar_files:
         if '.csv' in file:
             name = string.join(string.split(file,'_')[1:-1],'_')
-            fn = filepath('BuildDBs/tftargets/'+file)
+            fn = filepath('BuildDBs/PAZAR/'+file)
             for line in open(fn,'rU').xreadlines():
                 data = cleanUpLine(line)
                 try:
                     ### Each line contains the following 11 tab-delim fields:
                     ### Fields are: <PAZAR TF ID>  <TF Name>  <PAZAR Gene ID>  <ensembl gene accession>  <chromosome>  <gene start coordinate>  <gene end coordinate>  <species>  <project name>  <PMID>  <analysis method> 
-                    pazar_tf_id, ens_tf_transcript, tf_name, pazar_geneid, ens_gene, chr, gene_start,gene_end,species,project,pmid,analysis_method = string.split(data,'\t')
-                    if ens_tf_transcript == 'ENSMUST00000105345' and 'Pluripotency' in project:
-                        ### This is a specific error (TCF3 corresponds to TCF7L1 but poor nomenclature resulted in a mis-annotation here)
-                        ens_tf_transcript = 'ENSMUST00000069536'
+                    pazar_tf_id, tf_name, pazar_geneid, ens_gene, chr, gene_start,gene_end,species,project,pmid,analysis_method = string.split(data,'\t')
                     species,genus = string.split(species,' ')
                     species = species[0]+genus[0]
                     tft=TFTargetInfo(tf_name,ens_gene,project,pmid,analysis_method)
                     try: tf_to_target[species,tf_name].append(tft)
                     except Exception: tf_to_target[species,tf_name] = [tft]
                     species_db[species]=[]
-                    tf_name_to_ID_db[tf_name] = ens_tf_transcript ### This is an Ensembl transcript ID -> convert to gene ID
                 except Exception:
                     None ### Occurs due to file formatting issues (during an update?)
-    
+
+    determine_tf_geneids = 'no'
     if determine_tf_geneids == 'yes':
         """ The below code is probably most useful for creation of complex regulatory inference networks in Cytoscape """
-        uniprot_ensembl_db = importUniProtAnnotations(species_db) ### Get UniProt IDs that often match Pazar TF names
-        transcript_to_gene_db={}
-        gene_to_symbol_db={}
-        #species_db={}
-        #species_db['Mm']=[]
-        for species in species_db:
-            try:
-                try: gene_to_transcript_db = gene_associations.getGeneToUid(species,('hide','Ensembl-EnsTranscript')); #print mod_source, 'relationships imported.'
-                except Exception:
-                    downloadEnsemblTranscriptAssociations(species)
-                    gene_to_transcript_db = gene_associations.getGeneToUid(species,('hide','Ensembl-EnsTranscript'))
-                gene_to_symbol = gene_associations.getGeneToUid(species,('hide','Ensembl-Symbol'))
-            except Exception: gene_to_transcript_db={}; gene_to_symbol={}
-            #print len(gene_to_transcript_db), species
-            for gene in gene_to_transcript_db:
-                for transcript in gene_to_transcript_db[gene]:
-                    transcript_to_gene_db[transcript]=gene
-            for gene in gene_to_symbol:
-                gene_to_symbol_db[gene] = gene_to_symbol[gene]
-
+        uniprot_ensembl_db = importUniProtAnnotations(species_db)
         missing=[]
+        tf_to_target_ens={}
         for (species,tf_name) in tf_to_target:
             original_tf_name = tf_name
             try:
-                ens_tf_transcript = tf_name_to_ID_db[tf_name]
-                ens_gene = transcript_to_gene_db[ens_tf_transcript]
-                #if 'ENSMUST00000025271' == ens_tf_transcript: print ens_gene;kill
-                #print gene_to_symbol_db[ens_gene];sys.exit()
-                symbol = string.lower(gene_to_symbol_db[ens_gene][0]) ### covert gene ID to lower case symbol ID
-                ### Store the original TF name and Ensembl symbol (different species TFs can have different symbols - store all)
-                try: tf_to_target_symbol[original_tf_name].append(symbol)
-                except Exception: tf_to_target_symbol[original_tf_name] = [symbol]
+                ens_gene = uniprot_ensembl_db[species,tf_name]
+                tf_to_target_ens[ens_gene]=tf_to_target[species,tf_name]
             except Exception:
                 try:
-                    #ens_tf_transcript = tf_name_to_ID_db[tf_name]
-                    #print species, tf_name, ens_tf_transcript;sys.exit()
+                    tf_name = string.split(tf_name,'_')[0]
                     ens_gene = uniprot_ensembl_db[species,tf_name]
-                    symbol = string.lower(gene_to_symbol_db[ens_gene][0]) ### covert gene ID to lower case symbol ID
-                    try: tf_to_target_symbol[original_tf_name].append(symbol)
-                    except Exception: tf_to_target_symbol[original_tf_name] = [symbol]
+                    tf_to_target_ens[ens_gene]=tf_to_target[species,original_tf_name]
                 except Exception:
                     try:
-                        tf_name = string.split(tf_name,'_')[0]
-                        ens_gene = uniprot_ensembl_db[species,tf_name]
-                        symbol = string.lower(gene_to_symbol_db[ens_gene][0]) ### covert gene ID to lower case symbol ID
-                        try: tf_to_target_symbol[original_tf_name].append(symbol)
-                        except Exception: tf_to_target_symbol[original_tf_name] = [symbol]
-                    except Exception:
-                        try:
-                            tf_names=[]
-                            if '/' in tf_name:
-                                tf_names = string.split(tf_name,'/')
-                            elif ' ' in tf_name:
-                                tf_names = string.split(tf_name,' ')
-                            for tf_name in tf_names:
-                                ens_gene = uniprot_ensembl_db[species,tf_name]
-                                symbol = string.lower(gene_to_symbol_db[ens_gene][0]) ### covert gene ID to lower case symbol ID
-                                try: tf_to_target_symbol[original_tf_name].append(symbol)
-                                except Exception: tf_to_target_symbol[original_tf_name] = [symbol]
-                        except Exception: missing.append((tf_name,species))
-        print 'Ensembl IDs found for transcript or UniProt Transcription factor names:',len(tf_to_target_symbol),'and missing:', len(missing)
+                        tf_names=[]
+                        if '/' in tf_name:
+                            tf_names = string.split(tf_name,'/')
+                        elif ' ' in tf_name:
+                            tf_names = string.split(tf_name,' ')
+                        for tf_name in tf_names:
+                            ens_gene = uniprot_ensembl_db[species,tf_name]
+                            tf_to_target_ens[ens_gene]=tf_to_target[species,original_tf_name]          
+                    except Exception: missing.append((tf_name,species))
+        print 'Ensembl IDs found for UniProt Transcription factor names:',len(tf_to_target_ens),'and missing:', len(missing)
         #print missing[:20]
         
     ### Translate all species data to gene symbol to export for all species
@@ -420,7 +340,7 @@ def importPAZARAssociations():
             tf_db[tf_name] = tf_to_target[species,tf_name]
             species_tf_targets[species] = tf_db
         
-    tf_dir = 'BuildDBs/tftargets/symbol/tf-target.txt'
+    tf_dir = 'BuildDBs/PAZAR/symbol/tf-target.txt'
     tf_data = export.ExportFile(tf_dir)
     tf_to_symbol={}
     #print 'Exporting:',tf_dir
@@ -445,7 +365,7 @@ def importPAZARAssociations():
 
 def importPAZARcompiled():
     """ Skips over the above function when these tf-target file is downlaoded directly """
-    tf_dir = 'BuildDBs/tftargets/symbol/tf-target.txt'
+    tf_dir = 'BuildDBs/PAZAR/symbol/tf-target.txt'
     tf_to_symbol={}
     fn = filepath(tf_dir)
     for line in open(fn,'rU').xreadlines():
@@ -492,26 +412,9 @@ def importAmandeusPredictions(force):
         else:
             symbol,system,tf_name = string.split(data,'\t')
             symbol = string.lower(symbol)
-            if tf_name == 'Oct4': tf_name = 'Pou5f1' ### Known annotation issue
             try: tf_symbol_db[tf_name].append(symbol)
             except Exception: tf_symbol_db[tf_name]=[symbol]
     tf_symbol_db = gene_associations.eliminate_redundant_dict_values(tf_symbol_db)
-    
-    if determine_tf_geneids == 'yes':
-        """ ### Since this data is species independent (not indicated in the current file) can't apply this yet
-        uniprot_ensembl_db = importUniProtAnnotations(species_db)
-        try: gene_to_symbol = gene_associations.getGeneToUid(species,('hide','Ensembl-Symbol'))
-        except Exception: gene_to_symbol={}
-        symbol_to_gene = OBO_import.swapKeyValues(gene_to_symbol)
-        symbol_to_gene = lowerSymbolDB(symbol_to_gene)
-        uniprot_ensembl_db = lowerSymbolDB(uniprot_ensembl_db)
-        """
-        ### Build a TFname to Ensembl gene symbol database for Amadeus
-        for tf_name in tf_symbol_db:
-            symbol = string.lower(string.split(tf_name,'(')[0])
-            if 'miR' not in tf_name and 'let' not in tf_name: ### Exlude miRNAs
-                try: tf_to_target_symbol[tf_name].append(symbol)
-                except Exception: tf_to_target_symbol[tf_name] = [symbol]
     return tf_symbol_db
     
 def importDiseaseOntologyGeneAssocations():
@@ -539,26 +442,6 @@ def exportSymbolRelationships(pathway_to_symbol,selected_species,pathway_type,ty
         if '.' not in species:
             ens_dir = database_dir+'/'+species+'/gene-'+type+'/Ensembl-'+pathway_type+'.txt'
             ens_data = export.ExportFile(ens_dir)
-            try:
-                if determine_tf_geneids == 'yes':
-                    ### When TF data is exported and TF gene-gene interactions are defined, export them
-                    tf_network_dir = 'BuildDBs/TF_Interactions/'+species+'/interactions.txt'
-                    tf_network_data = export.ExportFile(tf_network_dir)
-                    tf_network_data.write('Symbol1\tInteractionType\tSymbol2\tGeneID1\tGeneID2\tSource\n')
-                    interaction = 'transcriptional_target'
-                    print 'Exporting TF-Target gene-gene relationships to',tf_network_dir
-                    tf_count=0; unique_interactions={}
-                    try:
-                        gene_chr_db = gene_associations.getGeneToUid(species,('hide','Ensembl-chr'))
-                    except Exception: 
-                        try:
-                            ensembl_version = unique.getCurrentGeneDatabaseVersion()
-                            import EnsemblSQL
-                            EnsemblSQL.getChrGeneOnly(species,'Basic',ensembl_version,'yes')
-                            gene_chr_db = gene_associations.getGeneToUid(species,('hide','Ensembl-chr'))
-                        except Exception: gene_chr_db={}
-                    
-            except Exception: None
             if 'mapp' in type: ens_data.write('GeneID\tSystem\tGeneSet\n')
             else: ens_data.write('GeneID\tGeneSet\n')
             try: ens_to_entrez = gene_associations.getGeneToUid(species,('hide','Ensembl-EntrezGene'))
@@ -584,93 +467,19 @@ def exportSymbolRelationships(pathway_to_symbol,selected_species,pathway_type,ty
                                 for entrez in ens_to_entrez[gene]:
                                     if 'mapp' in type: entrez_data.write(entrez+'\tL\t'+pathway+'\n')
                                     else: entrez_data.write(entrez+'\t'+pathway+'\n')
-                            try:
-                                if determine_tf_geneids == 'yes':
-                                    if '(' in pathway:
-                                        source_name = string.split(pathway,'(')[0]
-                                    else:
-                                        source_name =  pathway
-                                    proceed = True
-                                    if gene in gene_chr_db:
-                                        if len(gene_chr_db[gene][0])>2: ### not a valid chromosome (e.g., HSCHR6_MHC_COX)
-                                            proceed = False
-                                    if proceed ==True or proceed == False:
-                                        try: symbols = tf_to_target_symbol[source_name]
-                                        except Exception: symbols = tf_to_target_symbol[pathway]
-                                        for symbol in symbols:
-                                            tf_gene = source_to_gene[symbol][0] ### meta-species converted symbol -> species Ensembl gene
-                                            tf_symbol = gene_to_source_id[tf_gene][0] ### species formatted symbol for TF
-                                            symbol = gene_to_source_id[gene][0] ### species formatted symbol for target
-                                            if (tf_symbol,symbol,pathway) not in unique_interactions:
-                                                tf_network_data.write(string.join([tf_symbol,interaction,symbol,tf_gene,gene,pathway],'\t')+'\n')
-                                                unique_interactions[tf_symbol,symbol,pathway]=[]
-                                                try: merged_tf_interactions[tf_symbol].append(string.lower(symbol))
-                                                except Exception: merged_tf_interactions[tf_symbol] = [string.lower(symbol)]
-                                                tf_count+=1
-                            except Exception: None
                     except Exception: null=[]
             ens_data.close()
             try: entrez_data.close()
             except Exception: null=[]
-            try:
-                if determine_tf_geneids == 'yes':
-                    tf_network_data.close()
-                    print tf_count,'TF to target interactions exported..'
-            except Exception: None
-
-def translateBioMarkersBetweenSpecies(input_dir,species):
-    ### Convert the species Ensembl primary key IDs from the source to 
-    try:
-        biomarker_files = unique.read_directory(input_dir)
-    except Exception:
-        biomarker_files = unique.read_directory(input_dir)
-        
-    try: gene_to_source_id = gene_associations.getGeneToUid(species,('hide','Ensembl-Symbol'))
-    except Exception: gene_to_source_id={}
-    source_to_gene = OBO_import.swapKeyValues(gene_to_source_id)
-    source_to_gene = lowerSymbolDB(source_to_gene)
-    print len(source_to_gene)
-
-    marker_symbol_db={}
-    for file in biomarker_files:
-        if 'tissue-specific' in file and species not in file: ### Don't re-translate an already translated file
-            export_dir = 'AltDatabase/ensembl/'+species+'/'+species+file[2:]
-            export_data = export.ExportFile(export_dir)
-            fn = filepath(input_dir+'/'+file)
-            x=0
-            for line in open(fn,'rU').xreadlines():
-                data = cleanUpLine(line)
-                t = string.split(data,'\t')
-                if x==0:
-                    x = 1; y=0
-                    for i in t:
-                        if 'Symbol' in i: sy = y
-                        y+=1
-                    export_data.write(line)
-                else:
-                    ensembl = t[0]; symbol = string.lower(t[sy])
-                    #print symbol, len(source_to_gene);sys.exit()
-                    if symbol in source_to_gene:
-                        species_gene = source_to_gene[symbol][0] ### should only be one gene per symbol (hopefully)
-                        values = string.join([species_gene]+t[1:],'\t')+'\n'
-                        export_data.write(values)
-            export_data.close()
-            print export_dir,'written...'
-         
+            
 def extractKEGGAssociations(species,mod,system_codes):
     import_dir = filepath('/BuildDBs/KEGG')
     g = gene_associations.GrabFiles(); g.setdirectory(import_dir)
     filedir = g.getMatchingFolders(species)
     gpml_data,pathway_db = gene_associations.parseGPML(filepath(filedir))
     gene_to_WP = gene_associations.unifyGeneSystems(gpml_data,species,mod)
+
     gene_associations.exportCustomPathwayMappings(gene_to_WP,mod,system_codes,filepath(database_dir+'/'+species+'/gene-mapp/'+mod+'-KEGG.txt'))
-    if len(gene_to_WP)>0 and mod == 'Ensembl': ### Export all pathway interactions
-        try: gene_associations.exportNodeInteractions(pathway_db,mod,filepath(filedir))
-        except Exception: null=[]
-    elif len(gene_to_WP)>0 and mod == 'HMDB': ### Export all pathway interactions
-        try: gene_associations.exportNodeInteractions(pathway_db,mod,filepath(filedir),appendToFile=True)
-        except Exception: null=[]
-    return filedir
 
 def extractGMTAssociations(species,mod,system_codes,data_type):
     if mod != 'HMDB':
@@ -722,32 +531,6 @@ def translateToEntrezGene(species,filename):
                     null=[]
         export_data.close()
 
-def importRVistaGeneAssociations(species_code,source_path):
-    x=0; tf_symbol_db={}
-    fn = filepath(source_path)
-    
-    TF_symbol_db={}
-    if species_code == 'Dm' or species_code == 'Mm': ### Dm IDs are Ensembl
-        gene_to_symbol = gene_associations.getGeneToUid(species_code,('hide','Ensembl-Symbol'))
-    increment = 10000
-    print 'Importing symbol-R Vista TF assocations (be patient)'
-    x=0
-    for line in open(fn,'rU').xreadlines():
-        data = cleanUpLine(line)
-        x+=1
-        #if x==increment: x=0; print '*',
-        try:
-            symbol,TF = string.split(data,'\t')
-            if species_code == 'Dm' or species_code == 'Mm':
-                ensembls = [symbol]
-                try: symbol = gene_to_symbol[symbol][0]
-                except Exception: forceError
-            try: TF_symbol_db[TF].append(string.lower(symbol))
-            except Exception: TF_symbol_db[TF]=[string.lower(symbol)]
-        except Exception: None
-    TF_symbol_db = gene_associations.eliminate_redundant_dict_values(TF_symbol_db)
-    return TF_symbol_db
-    
 def importMiRGeneAssociations(species_code,source_path):
     try:
         destination_path = filepath(database_dir+'/'+species_code+'/gene-mapp/Ensembl-microRNATargets.txt')
@@ -755,11 +538,11 @@ def importMiRGeneAssociations(species_code,source_path):
         translateToEntrezGene(species_code,destination_path)
     except Exception: null=[]            
         
-def importBioMarkerGeneAssociations(input_dir):
+def importBioMarkerGeneAssociations():
     try:
-        biomarker_files = unique.read_directory(input_dir)
+        biomarker_files = unique.read_directory('BuildDBs/BioMarkers/')
     except Exception:
-        biomarker_files = unique.read_directory(input_dir)
+        biomarker_files = unique.read_directory('/BuildDBs/BioMarkers/')
     x=0; marker_symbol_db={}
     for file in biomarker_files:
         if '.txt' in file:
@@ -787,91 +570,7 @@ def importDomainGeneAssociations(species_code,source_path):
         export.copyFile(source_path,destination_path)
         translateToEntrezGene(species_code,destination_path)
     except Exception: null=[]            
-
-def importBioGRIDGeneAssociations(taxid,species):
-    model_mammal_tax = {}
-    model_mammal_tax['9606'] = 'Hs'
-    model_mammal_tax['10090'] = 'Mm'
-    model_mammal_tax['10116'] = 'Rn'
-    
-    filtered=considerOnlyMammalian([species]) ### See if the species is a mammal
-    if len(filtered)==0: model_mammal_tax={} ### Don't inlcude the gold standard mammals if not a mammal
-    
-    model_mammal_tax[taxid]=species
-    
-    biogrid_files = unique.read_directory('/BuildDBs/BioGRID')
-    latest_file = biogrid_files[-1]
-    fn = filepath('BuildDBs/BioGRID/'+latest_file)
-    
-    ens_dir = database_dir+'/'+species+'/gene-interactions/Ensembl-BioGRID.txt'
-    ens_data = export.ExportFile(ens_dir)
-    ens_data.write('Symbol1\tInteractionType\tSymbol2\tGeneID1\tGeneID2\tSource\n')
-    
-    try: gene_to_source_id = gene_associations.getGeneToUid(species,('hide','Ensembl-Symbol'))
-    except Exception: gene_to_source_id={}
-    source_to_gene = OBO_import.swapKeyValues(gene_to_source_id)
-    source_to_gene = lowerSymbolDB(source_to_gene)
-            
-    for line in open(fn,'rU').xreadlines():
-        data = cleanUpLine(line)
-        t = string.split(data,'\t')
-        species_tax = t[15]
-        if species_tax in model_mammal_tax:
-            symbol1 = t[7]; symbol2 = t[8]
-            source_exp = t[11]; interaction_type = t[12]
-            try:
-                ens1 = source_to_gene[string.lower(symbol1)][0]
-                ens2 = source_to_gene[string.lower(symbol2)][0]
-                values = string.join([symbol1,interaction_type,symbol2,ens1,ens2,source_exp],'\t')+'\n'
-                ens_data.write(values)
-            except Exception:
-                None
-
-def importDrugBankAssociations(species):
-    fn = filepath('BuildDBs/DrugBank/drugbank.txt')
-    
-    ens_dir = database_dir+'/'+species+'/gene-interactions/Ensembl-DrugBank.txt'
-    ens_data = export.ExportFile(ens_dir)
-    ens_data.write('DrugName\tMechanism\tGeneSymbol\tDrugBankDB-ID\tGeneID\tSource\n')
-    
-    try: gene_to_source_id = gene_associations.getGeneToUid(species,('hide','Ensembl-Symbol'))
-    except Exception: gene_to_source_id={}
-    source_to_gene = OBO_import.swapKeyValues(gene_to_source_id)
-    source_to_gene = lowerSymbolDB(source_to_gene)
-    
-    getCAS=False
-    getGenericName=False
-    getMechanim = False
-    getGeneName = False
-    geneNames=[]
-    mechanism=''
-    for line in open(fn,'rU').xreadlines():
-        data = cleanUpLine(line)
-        
-        if data == '# Primary_Accession_No:': getCAS=True ### switched this from CAS to Drug bank ID for consistency and namining simplicity
-        elif getCAS: casID = data; getCAS=False
-        
-        if data == '# Generic_Name:': getGenericName=True
-        elif getGenericName: genericName = data; getGenericName=False
-        
-        if data == '# Mechanism_Of_Action:': getMechanim=True
-        elif getMechanim:
-            if len(data)>0: mechanism += data + ' '
-            else: getMechanim=False
-            
-        if '# Drug_Target_' in data and '_Gene_Name' in data: getGeneName=True
-        elif getGeneName: geneNames.append(data); getGeneName=False
-        
-        if '#END_DRUGCARD' in data:
-            for symbol in geneNames:
-                try:
-                    ens = source_to_gene[string.lower(symbol)][0]
-                    values = string.join([genericName,mechanism,symbol,casID,ens,'DrugBank'],'\t')+'\n'
-                    ens_data.write(values)
-                except Exception:
-                    None
-            casID=''; genericName=''; mechanism=''; geneNames=[]
-    
+          
 ############# Central buid functions #############
 
 def importWikiPathways(selected_species,force):
@@ -883,9 +582,6 @@ def importWikiPathways(selected_species,force):
     if force == 'yes':
         try:
             gene_associations.convertAllGPML(selected_species,all_species) ### Downloads GPMLs and builds flat files
-            for species_code in selected_species:
-                interaction_file = 'GPML/Interactomes/interactions.txt'
-                moveInteractionsToInteractionsDir(interaction_file,species_code,'WikiPathways')
             status = 'built'
         except IOError:
             print 'Unable to connect to http://www.wikipathways.org'
@@ -908,12 +604,6 @@ def importWikiPathways(selected_species,force):
                     index+=1
     print 'Finished integrating updated WikiPathways'
 
-def moveInteractionsToInteractionsDir(source_file,species,name):
-    destination_file = filepath('AltDatabase/goelite/'+species+'/gene-interactions/Ensembl-'+name+'.txt')
-    source_file = filepath(source_file)
-    try: export.copyFile(source_file,destination_file)
-    except Exception: None ### No file to move
-    
 def importKEGGAssociations(selected_species,force):
     supported_databases = ['Ag','At','Ce','Dm','Dr','Hs','Mm','Os','Rn']
     getSourceData()
@@ -925,19 +615,12 @@ def importKEGGAssociations(selected_species,force):
                 supported_databases2.append(species)
         supported_databases = supported_databases2
 
-    mod_types_list=[]
-    for i in mod_types:  mod_types_list.append(i)
-    mod_types_list.sort()
-    
     for species in supported_databases:
         if force == 'yes':
             downloadKEGGPathways(species)
-        for mod in mod_types_list:
-            buildDB_dir = extractKEGGAssociations(species,mod,system_codes)
-            
-        interaction_file = buildDB_dir+'/Interactomes/interactions.txt'
-        moveInteractionsToInteractionsDir(interaction_file,species,'KEGG')
-                
+        for mod in mod_types:
+            extractKEGGAssociations(species,mod,system_codes)
+
 def importPathwayCommons(selected_species,force):
     original_species = selected_species
     selected_species = considerOnlyMammalian(selected_species)
@@ -956,40 +639,20 @@ def importPathwayCommons(selected_species,force):
 def importTranscriptionTargetAssociations(selected_species,force):
     original_species = selected_species
     selected_species = considerOnlyMammalian(selected_species)
-    x=[]
     if len(selected_species) == 0:
         print 'PLEASE NOTE: %s does not support Transcription Factor association update.' % string.join(original_species,',')
     else:
-        global determine_tf_geneids
-        global tf_to_target_symbol ### Used for TF-target interaction networks
-        global merged_tf_interactions
-        tf_to_target_symbol={}
-        source = 'raw'#'precompiled'
-        merged_tf_interactions={} ### Stores the final merged PAZAR-Amadeus merged data
-        determine_tf_geneids = 'yes'
-        
         ### No need to specify a species since the database will be added only to currently installed species
         if force == 'yes':
             source = downloadPAZARAssocations()
         if source == 'raw':
             x = importPAZARAssociations() ### builds the PAZAR TF-symbol associations from resource.csv files
-        if source == 'precompiled' or len(x)==0:
+        else:
             x = importPAZARcompiled() ### imports from pre-compiled/downloaded TF-symbol associations
             
         y = importAmandeusPredictions(force)
         z = dict(x.items() + y.items())
-        geneset = 'TFTargets'
-        if determine_tf_geneids == 'yes':
-            tf_to_target_symbol = gene_associations.eliminate_redundant_dict_values(tf_to_target_symbol)
-            exportSymbolRelationships(z,selected_species,geneset,'mapp')
-            determine_tf_geneids = 'no'
-            geneset = 'MergedTFTargets'
-            z = merged_tf_interactions
-        exportSymbolRelationships(merged_tf_interactions,selected_species,geneset,'mapp')
-        
-        for species in selected_species:
-            interaction_file = 'BuildDBs/TF_Interactions/'+species+'/interactions.txt'
-            moveInteractionsToInteractionsDir(interaction_file,species,'TFTargets')
+        exportSymbolRelationships(z,selected_species,'TFTargets','mapp')
 
 def importPhenotypeOntologyData(selected_species,force):
     original_species = selected_species
@@ -1021,30 +684,6 @@ def importGOSlimAssociations(selected_species,force):
         downloadGOSlimOBO()
     transferGOSlimGeneAssociations(selected_species)
     
-def importRVistaAssocations(selected_species,force):
-    supported_databases = ['Hs','Mm','Dm']
-    selected_supported_databases=[]
-    for species in selected_species:
-        if species in supported_databases:
-            selected_supported_databases.append(species)
-            
-    missing_Rvista_associations=[]
-    found_Rvista_associations=[]
-    for species in selected_supported_databases:
-        if force == 'yes':
-            try:
-                fn = downloadRvistaDatabases(species)
-                found_Rvista_associations.append((species,fn))
-            except Exception:
-                missing_Rvista_associations.append(species)
-        else:
-            fn = filepath('BuildDBs/RVista/'+species+'_RVista_factors.txt')
-            found_Rvista_associations.append((species,fn))
-   
-    for (species,fn) in found_Rvista_associations:
-        TF_symbol_db = importRVistaGeneAssociations(species,fn)
-        exportSymbolRelationships(TF_symbol_db,[species],'RVista_TFsites','mapp')
-        
 def importMiRAssociations(selected_species,force):
     supported_databases = unique.read_directory('/'+database_dir)
     if selected_species != None: ### Restrict by selected species
@@ -1063,9 +702,6 @@ def importMiRAssociations(selected_species,force):
     for (species,fn) in found_miR_associations:
         importMiRGeneAssociations(species,fn)
         
-        interaction_file = 'AltDatabase/goelite/'+species+'/gene-mapp/Ensembl-microRNATargets.txt'
-        moveInteractionsToInteractionsDir(interaction_file,species,'microRNATargets')
-            
 def importBioMarkerAssociations(selected_species,force):
     original_species = selected_species
     selected_species = considerOnlyMammalian(selected_species)
@@ -1073,32 +709,17 @@ def importBioMarkerAssociations(selected_species,force):
         print 'PLEASE NOTE: %s does not support BioMarker association update.' % string.join(original_species,',')
     else:
         if force == 'yes':
-            downloadBioMarkers('BuildDBs/BioMarkers/')
-        x = importBioMarkerGeneAssociations('BuildDBs/BioMarkers/')
+            downloadBioMarkers()
+        x = importBioMarkerGeneAssociations()
         exportSymbolRelationships(x,selected_species,'BioMarkers','mapp')
 
-def importDrugBank(selected_species,force):
-    if force == 'yes':
-        downloadDrugBankAssociations()
-    for species in selected_species:
-        importDrugBankAssociations(species)
-                
-def importBioGRID(selected_species,force):
-    if force == 'yes':
-        downloadBioGRIDAssociations()
-    for species in selected_species:
-        importSpeciesData() ### Creates the global species_taxids
-        if species in species_taxids:
-            taxid = species_taxids[species]
-            importBioGRIDGeneAssociations(taxid,species)
-      
 def importDomainAssociations(selected_species,force):
     if force == 'yes':
         paths = downloadDomainAssociations(selected_species)
         for (species,path) in paths:
             path = string.replace(path,'.gz','.txt')
             importDomainGeneAssociations(species, path)
-    
+
 def considerOnlyMammalian(selected_species):
     supported_mammals = ['Am','Bt', 'Cf', 'Ch', 'Cj', 'Cp', 'Do', 'Ec', 'Ee', 'Et', 'Fc', 'Gg', 'Go', 'Hs',
                          'La', 'Ma', 'Md', 'Me', 'Mi', 'Ml', 'Mm', 'Oa', 'Oc','Og', 'Op', 'Pc', 'Pp',
@@ -1127,20 +748,12 @@ def buildInferrenceTables(selected_species):
 
 def buildAccessoryPathwayDatabases(selected_species,additional_resources,force):
     global database_dir
-    global program_dir
     global program_type
     program_type,database_dir = unique.whatProgramIsThis()
-    if program_type == 'AltAnalyze':
-        program_dir = database_dir
-    else:
-        program_dir=''
-
+    
     buildInferrenceTables(selected_species) ### Make sure these tables are present first!!!
         
-    print 'Attempting to update:', string.join(additional_resources,',')
-    if 'Latest WikiPathways' in additional_resources:
-        try: importWikiPathways(selected_species,force)
-        except Exception: print 'WikiPathways import failed (cause unknown)'
+    #print 'Attempting to update:', string.join(additional_resources,',')
     if 'KEGG' in additional_resources:
         try: importKEGGAssociations(selected_species,force)
         except Exception: print 'KEGG import failed (cause unknown)'
@@ -1162,31 +775,21 @@ def buildAccessoryPathwayDatabases(selected_species,additional_resources,force):
     if 'BioMarkers' in additional_resources:
         try: importBioMarkerAssociations(selected_species,force)
         except Exception: print 'BioMarkers import failed (cause unknown)'#,traceback.format_exc()
-    if 'Domains2' in additional_resources: ### Currently disabled since it's utility is likely low but analysis time is long
+    if 'Domains' in additional_resources:
         try: importDomainAssociations(selected_species,force)
         except Exception: print 'Domains import failed (cause unknown)'
     if 'PathwayCommons' in additional_resources:
         try: importPathwayCommons(selected_species,force)
         except Exception: print 'PathwayCommons import failed (cause unknown)'
-    if 'RVista Transcription Factor Sites' in additional_resources:
-        try: importRVistaAssocations(selected_species,force)
-        except Exception: print 'R Vista Transcription Factor Site import failed (cause unknown)'
-    if 'BioGRID' in additional_resources:
-        try: importBioGRID(selected_species,force)
-        except Exception: print 'BioGRID import failed (cause unknown)'
-    if 'DrugBank' in additional_resources:
-        try: importDrugBank(selected_species,force)
-        except Exception: print 'Drug Bank import failed (cause unknown)'
-        
+    if 'Latest WikiPathways' in additional_resources:
+        try: importWikiPathways(selected_species,force)
+        except Exception: print 'WikiPathways import failed (cause unknown)'
+            
 if __name__ == '__main__':
     selected_species = ['Mm']
     force = 'no'
-    download_species = 'Mm'
-    species = 'Mm'
-    #additional_resources=['Latest WikiPathways','KEGG','BioGRID','DrugBank','miRNA Targets','Transcription Factor Targets']
-    #translateBioMarkersBetweenSpecies('AltDatabase/ensembl/'+download_species,species);sys.exit()
     additional_resources=['Latest WikiPathways','PathwayCommons','Transcription Factor Targets','Domains','BioMarkers']
-    additional_resources+=['miRNA Targets','GOSlim','Disease Ontology','Phenotype Ontology','KEGG','RVista Transcription Factor Sites']
-    additional_resources=['RVista Transcription Factor Sites']
+    additional_resources+=['miRNA Targets','GOSlim','Disease Ontology','Phenotype Ontology','KEGG']
+    additional_resources=['Latest WikiPathways']
     buildAccessoryPathwayDatabases(selected_species,additional_resources,force)
     

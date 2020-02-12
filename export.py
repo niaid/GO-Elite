@@ -73,8 +73,7 @@ def customFileMove(old_fn,new_fn):
     new_fn = filepath(new_fn)
     raw = ExportFile(new_fn)
     for line in open(old_fn,'rU').xreadlines():
-        if line[0]!='#': ### Applies to Affymetrix APT data (screws up combat)
-            raw.write(line)
+        raw.write(line)
     raw.close()
     os.remove(old_fn)
 
@@ -83,8 +82,7 @@ def customFileCopy(old_fn,new_fn):
     new_fn = filepath(new_fn)
     raw = ExportFile(new_fn)
     for line in open(old_fn,'rU').xreadlines():
-        if line[0]!='#': ### Applies to Affymetrix APT data (screws up combat)
-            raw.write(line)
+        raw.write(line)
     raw.close()
     
 def isFileOpen(new_file,dir):
@@ -235,7 +233,7 @@ def cleanUpLine(line):
     data = string.replace(data,'"','')
     return data
 
-def cleanFile(source_file,removeExtra=None):
+def cleanFile(source_file):
     ### Some files have extra odd encoding that results in blank new lines in the extracted file
     ### For succeptible directories copy all files line by line, removing existing end of lines
     file = findFilename(source_file); temp_file = 'tempdir/'+file
@@ -243,10 +241,7 @@ def cleanFile(source_file,removeExtra=None):
     fn=filepath(source_file)
     for line in open(fn,'rU').xreadlines():
         line = cleanUpLine(line)
-        writeFile=True
-        if removeExtra!=None:
-            if line[0]==removeExtra: writeFile=False
-        if len(line)>0 and writeFile: data.write(line+'\n')
+        if len(line)>0: data.write(line+'\n')
     data.close()
     ### Replace old file with new file
     copyFile(temp_file,source_file)
