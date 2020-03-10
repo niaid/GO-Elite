@@ -1,1 +1,0 @@
-Hs Ensembl relationships downloaded from EnsemblSQL server, build 62
